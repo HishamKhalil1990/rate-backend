@@ -1,0 +1,1 @@
+NSERT INTO userstable (username,pass) VALUES ('hisham','hisham')
