@@ -1,1 +1,1 @@
-NSERT INTO userstable (username,pass) VALUES ('hisham','hisham')
+INSERT INTO userstable (username,pass) VALUES ('hisham','hisham')
