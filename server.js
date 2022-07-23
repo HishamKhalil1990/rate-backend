@@ -64,9 +64,9 @@ function getNoRates(req, res) {
 }
 
 function saveRate(req,res){
-    const {warehouse,answers,note,username} = req.body;
-    const addRate = 'INSERT INTO formstable (warehouse,answers,note,username) VALUES ($1, $2, $3, $4) RETURNING *';
-    const rateInfo = [warehouse,answers,note,username];
+    const {warehouse,visit,answers,note,username} = req.body;
+    const addRate = 'INSERT INTO formstable (warehouse,visit,answers,note,username) VALUES ($1, $2, $3, $4, $5) RETURNING *';
+    const rateInfo = [warehouse,visit,answers,note,username];
     client.query(addRate, rateInfo).then(data => { 
         res.send({msg : 'added'})
     }).catch(err => {
