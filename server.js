@@ -151,7 +151,6 @@ function getUser(req,res){
         res.send(err)
     });
 }
-<<<<<<< HEAD
 
 async function getSupervisorOrders(req,res){
     const {cardcode} = req.params
@@ -163,5 +162,3 @@ async function getSupervisorOrders(req,res){
         res.send("service is shut down")
     })
 }
-=======
->>>>>>> 4f8e7145057690bb30e3343fab79cb8947a9f870
