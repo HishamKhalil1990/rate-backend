@@ -156,9 +156,14 @@ async function getSupervisorOrders(req,res){
     const {cardcode} = req.params
     axios.get(`${SERVICE_URL}/supervisor/${cardcode}`,{timeout : 10000})
     .then(orders => {
-        res.send(orders.data)
+        res.send({
+            msg:"success",
+            orders:orders.data
+        })
     })
     .catch((err) => {
-        res.send("service is shut down")
+        res.send({
+            msg:"service is shut down"
+        })
     })
 }
