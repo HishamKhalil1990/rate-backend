@@ -4,10 +4,12 @@ require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL
 const NODE_ENV = process.env.NODE_ENV;
+const SERVICE_URL = process.env.SERVICE_URL
 // requiering libraries
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser')
+const axios = require('axios')
 const pg = require('pg');
 // creating the app
 const app = express();
@@ -38,6 +40,7 @@ app.post('/get-user', getUser)
 app.post('/save-user', saveUser)
 app.put('/update-user', updateUser)
 app.delete('/delete-user', deleteUser)
+app.get('/supervisor-orders/:cardcode',getSupervisorOrders)
 
 function welcome(req, res) {
     res.send('server is running successfully')
@@ -147,4 +150,15 @@ function getUser(req,res){
         console.log(err)
         res.send(err)
     });
+}
+
+async function getSupervisorOrders(req,res){
+    const {cardcode} = req.params
+    axios.get(`${SERVICE_URL}/supervisor/${cardcode}`,{timeout : 10000})
+    .then(orders => {
+        res.send(orders.data)
+    })
+    .catch((err) => {
+        res.send("service is shut down")
+    })
 }
