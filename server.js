@@ -154,7 +154,7 @@ function getUser(req,res){
 
 async function getSupervisorOrders(req,res){
     const {cardcode} = req.params
-    axios.get(`${SERVICE_URL}/supervisor/${cardcode}`,{timeout : 10000})
+    axios.get(`${SERVICE_URL}/supervisor/${cardcode}`,{timeout : 30000})
     .then(orders => {
         res.send({
             msg:"success",
