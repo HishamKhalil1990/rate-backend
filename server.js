@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL
 const NODE_ENV = process.env.NODE_ENV;
 const SERVICE_URL = process.env.SERVICE_URL
+const CONFIRM_PASS = process.env.CONFIRM_PASS
 // requiering libraries
 const express = require('express');
 const cors = require('cors');
@@ -41,6 +42,11 @@ app.post('/save-user', saveUser)
 app.put('/update-user', updateUser)
 app.delete('/delete-user', deleteUser)
 app.get('/supervisor-orders/:cardcode',getSupervisorOrders)
+app.get('/get-all-supervisor-user', getSupervisorUsers)
+app.post('/check-supervisor-user', checkSupervisorUser)
+app.post('/register-supervisor-user', saveSupervisorUser)
+app.put('/update-supervisor-user', updateSupervisorUser)
+app.delete('/delete-supervisor-user', deleteSupervisorUser)
 
 function welcome(req, res) {
     res.send('server is running successfully')
@@ -138,6 +144,7 @@ function deleteUser(req,res){
         res.send({msg:"deleted"});
     }).catch(err => {
         console.log(err)
+        res.send(err)
     });
 }
 
@@ -166,4 +173,131 @@ async function getSupervisorOrders(req,res){
             msg:"service is shut down"
         })
     })
+}
+
+function getSupervisorUsers(req,res){
+    const getSupervisorUsers = 'SELECT * FROM supervisorUsertable';
+    client.query(getSupervisorUsers).then(data => {
+        res.send(data.rows)
+    }).catch(err => {
+        console.log(err)
+        res.send({
+            status: 'failed',
+            msg:"could not get all supervisor users due to server internal error, please try again"
+        })
+    });
+}
+
+function saveSupervisorUser(req,res){
+    const {username, password,cardCode,confirmPass} = req.body;
+    if(confirmPass == CONFIRM_PASS){
+        const getSupervisorUser = 'SELECT * FROM supervisorUsertable WHERE username = $1';
+        client.query(getSupervisorUser,[username]).then(data => {
+            if(data.rows[0]?.username == username){
+                res.send({
+                    status: 'failed',
+                    msg:"username exists"
+                })
+            }else{
+                const addUser = 'INSERT INTO supervisorUsertable (username,pass,cardcode) VALUES ($1, $2, $3) RETURNING *';
+                const userInfo = [username,password,cardCode];
+                client.query(addUser, userInfo).then(data => { 
+                    res.send({
+                        status: 'success',
+                    })
+                }).catch(err => {
+                    console.log(err)
+                    res.send({
+                        status: 'failed',
+                        msg:"could not save supervisor user due to server internal error, please try again"
+                    })
+                })
+            }
+        }).catch(err => {
+            console.log(err)
+            res.send({
+                status: 'failed',
+                msg:"could not save supervisor user due to server internal error, please try again"
+            })
+        });
+    }else{
+        res.send({
+            status: 'failed',
+            msg:"confirmation password is wrong"
+        })
+    }
+}
+
+function updateSupervisorUser(req,res){
+    const {username,newPass,newCode,confirmPass} = req.body;
+    let updateSupervisorUser;
+    let values;
+    if(newPass){
+        updateSupervisorUser = 'UPDATE supervisorUsertable SET pass=$1 WHERE username = $2'
+        values = [newPass,username]
+    }else if(newCode){
+        if(confirmPass == CONFIRM_PASS){
+            updateSupervisorUser = 'UPDATE supervisorUsertable SET cardcode=$1 WHERE username = $2'
+            values = [newCode,username]
+        }else{
+            res.send({
+                status: 'failed',
+                msg:"confirmation password is wrong"
+            })
+        }
+    }
+    client.query(updateSupervisorUser,values).then(data=>{
+        res.send({
+            status: 'success',
+        });
+    }).catch(err => {
+        console.log(err)
+        res.send({
+            status: 'failed',
+            msg:"could not update supervisor user due to server internal error, please try again"
+        })
+    });
+}
+
+function deleteSupervisorUser(req,res){
+    const {username} = req.body;
+    const deleteSupervisorUser = 'DELETE FROM supervisorUsertable WHERE username = $1'
+    client.query(deleteSupervisorUser,[username]).then(data=>{
+        res.send({
+            status: 'success',
+        });
+    }).catch(err => {
+        console.log(err)
+        res.send({
+            status: 'failed',
+            msg:"could not delete supervisor user due to server internal error, please try again"
+        })
+    });
+}
+
+function checkSupervisorUser(req,res){
+    const {username,password} = req.body;
+    const checkSupervisorUser = 'SELECT * FROM supervisorUsertable WHERE username = $1';
+    client.query(checkSupervisorUser,[username]).then(data => {
+        if(data.rows.length > 0){
+            if(data.rows[0].pass == password){
+                res.send({
+                    status: 'success',
+                    data : {
+                        username : data.rows[0].username,
+                        cardcode : data.rows[0].cardcode
+                    }
+                })
+            }
+        }else{
+            res.send({
+                status: 'faild',
+            })
+        }
+    }).catch(err => {
+        console.log(err)
+        res.send({
+            status: 'faild',
+        })
+    });
 }
