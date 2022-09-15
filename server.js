@@ -43,7 +43,7 @@ app.put('/update-user', updateUser)
 app.delete('/delete-user', deleteUser)
 app.get('/supervisor-orders/:cardcode',getSupervisorOrders)
 app.get('/get-all-supervisor-user', getSupervisorUsers)
-app.post('/check-supervisor-user', checkSupervisorUser)
+app.get('/check-supervisor-user', checkSupervisorUser)
 app.post('/register-supervisor-user', saveSupervisorUser)
 app.put('/update-supervisor-user', updateSupervisorUser)
 app.delete('/delete-supervisor-user', deleteSupervisorUser)
@@ -189,7 +189,7 @@ function getSupervisorUsers(req,res){
 }
 
 function saveSupervisorUser(req,res){
-    const {username, password,cardCode,confirmPass} = req.body;
+    const {username, password,cardcode,confirmPass} = req.body;
     if(confirmPass == CONFIRM_PASS){
         const getSupervisorUser = 'SELECT * FROM supervisorUsertable WHERE username = $1';
         client.query(getSupervisorUser,[username]).then(data => {
@@ -200,7 +200,7 @@ function saveSupervisorUser(req,res){
                 })
             }else{
                 const addUser = 'INSERT INTO supervisorUsertable (username,pass,cardcode) VALUES ($1, $2, $3) RETURNING *';
-                const userInfo = [username,password,cardCode];
+                const userInfo = [username,password,cardcode];
                 client.query(addUser, userInfo).then(data => { 
                     res.send({
                         status: 'success',
@@ -229,16 +229,16 @@ function saveSupervisorUser(req,res){
 }
 
 function updateSupervisorUser(req,res){
-    const {username,newPass,newCode,confirmPass} = req.body;
+    const {username,newpass,newcode,confirmPass} = req.body;
     let updateSupervisorUser;
     let values;
-    if(newPass){
+    if(newpass){
         updateSupervisorUser = 'UPDATE supervisorUsertable SET pass=$1 WHERE username = $2'
-        values = [newPass,username]
-    }else if(newCode){
+        values = [newpass,username]
+    }else if(newcode){
         if(confirmPass == CONFIRM_PASS){
             updateSupervisorUser = 'UPDATE supervisorUsertable SET cardcode=$1 WHERE username = $2'
-            values = [newCode,username]
+            values = [newcode,username]
         }else{
             res.send({
                 status: 'failed',
@@ -287,6 +287,10 @@ function checkSupervisorUser(req,res){
                         username : data.rows[0].username,
                         cardcode : data.rows[0].cardcode
                     }
+                })
+            }else{
+                res.send({
+                    status: 'faild',
                 })
             }
         }else{
