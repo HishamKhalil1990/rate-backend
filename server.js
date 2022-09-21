@@ -605,16 +605,16 @@ function saveMaltransUser(req,res){
 }
 
 function updateMaltransUser(req,res){
-    const {username,newpass,newEmail,confirmPass} = req.body;
+    const {username,newpass,newemail,confirmPass} = req.body;
     let updateMaltransUser;
     let values;
     if(newpass){
         updateMaltransUser = 'UPDATE maltransUsertable SET pass=$1 WHERE username = $2'
         values = [newpass,username]
-    }else if(newEmail){
+    }else if(newemail){
         if(confirmPass == CONFIRM_PASS){
             updateMaltransUser = 'UPDATE maltransUsertable SET email=$1 WHERE username = $2'
-            values = [newEmail,username]
+            values = [newemail,username]
         }else{
             res.send({
                 status: 'failed',
