@@ -12,6 +12,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser')
 const axios = require('axios')
 const pg = require('pg');
+// import functions
+const functions = require('./utils/functions')
+const authentication = functions.authentication
 // creating the app
 const app = express();
 // setup app
@@ -54,8 +57,8 @@ app.get('/get-all-maltrans-user', getMaltransUsers)
 app.get('/fetch-all-maltrans-user', fetchMaltransUsers)
 app.post('/check-maltrans-user', checkMaltransUser)
 app.post('/register-maltrans-user', saveMaltransUser)
-app.put('/update-maltrans-user', updateMaltransUser)
-app.delete('/delete-maltrans-user', deleteMaltransUser)
+app.put('/update-maltrans-user',authentication, updateMaltransUser)
+app.delete('/delete-maltrans-user',authentication, deleteMaltransUser)
 
 //////////////////////// check server is running //////////////////////////////
 function welcome(req, res) {
@@ -576,6 +579,7 @@ function saveMaltransUser(req,res){
                 client.query(addUser, userInfo).then(data => { 
                     res.send({
                         status: 'success',
+                        msg:"user registered"
                     })
                 }).catch(err => {
                     console.log(err)
@@ -621,6 +625,7 @@ function updateMaltransUser(req,res){
     client.query(updateMaltransUser,values).then(data=>{
         res.send({
             status: 'success',
+            msg: 'user updated'
         });
     }).catch(err => {
         console.log(err)
@@ -637,6 +642,7 @@ function deleteMaltransUser(req,res){
     client.query(deleteMaltransUser,[username]).then(data=>{
         res.send({
             status: 'success',
+            msg: 'user deleted'
         });
     }).catch(err => {
         console.log(err)
@@ -653,14 +659,13 @@ function checkMaltransUser(req,res){
     client.query(checkMaltransUser,[username]).then(data => {
         if(data.rows.length > 0){
             if(data.rows[0].pass == password){
+                let tokens = functions.create(username)
+                tokens.username = username
+                tokens.email = data.rows[0].email
                 res.send({
                     status:"success",
-                    msg:"registered",
-                    tokens : {
-                        token:'gggggg',
-                        username : data.rows[0].username,
-                        email : data.rows[0].email
-                    }
+                    msg:"success",
+                    tokens
                 })
             }else{
                 res.send({
