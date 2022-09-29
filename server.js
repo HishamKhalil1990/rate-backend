@@ -12,14 +12,14 @@ const cors = require('cors');
 const bodyParser = require('body-parser')
 const axios = require('axios')
 const pg = require('pg');
-// import functions
-const functions = require('./utils/functions')
-const authentication = functions.authentication
+// import routes
+const maltrans = require('./routes/maltrans')
 // creating the app
 const app = express();
 // setup app
 app.use(cors());
 app.use(bodyParser.json())
+app.use('/maltrans',maltrans)
 // creating psql client
 const options = NODE_ENV === 'production' ? { connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } } : { connectionString: DATABASE_URL };
 const client = new pg.Client(process.env.DATABASE_URL);
@@ -53,12 +53,6 @@ app.post('/check-supervisor-user', checkSupervisorUser)
 app.post('/register-supervisor-user', saveSupervisorUser)
 app.put('/update-supervisor-user', updateSupervisorUser)
 app.delete('/delete-supervisor-user', deleteSupervisorUser)
-app.get('/get-all-maltrans-user', getMaltransUsers)
-app.get('/fetch-all-maltrans-user', fetchMaltransUsers)
-app.post('/check-maltrans-user', checkMaltransUser)
-app.post('/register-maltrans-user', saveMaltransUser)
-app.put('/update-maltrans-user',authentication, updateMaltransUser)
-app.delete('/delete-maltrans-user',authentication, deleteMaltransUser)
 
 //////////////////////// check server is running //////////////////////////////
 function welcome(req, res) {
@@ -491,200 +485,3 @@ function checkSupervisorUser(req,res){
         })
     });
 }
-
-//////////////////////// maltrans users table //////////////////////////////////
-function getMaltransUsers(req,res){
-    const getMaltransUsers = 'SELECT * FROM maltransUsertable';
-    client.query(getMaltransUsers).then(data => {
-        res.send(data.rows)
-    }).catch(err => {
-        console.log(err)
-        res.send({
-            status: 'failed',
-            msg:"could not get all Maltrans users due to server internal error, please try again"
-        })
-    });
-}
-
-function fetchMaltransUsers(req,res){
-    if(NODE_ENV !== 'production'){
-        axios({
-            baseURL:'https://alrayhan-rate.herokuapp.com',
-            url: '/get-all-maltrans-user',
-            method: 'get',
-            headers: {
-                'Accept': 'application/json, text/plain, */*',
-                'Content-Type': 'application/json'
-            },
-        }).then(response => {
-            const records = response.data
-            let i = 0
-            const start = async() => {
-                for(i; i < records.length; i++){
-                    const rec = records[i];
-                    const data = {
-                        username:rec.username,
-                        password:rec.pass,
-                        email:rec.email,
-                        confirmPass:CONFIRM_PASS
-                    }
-                    await axios({
-                        baseURL:`http://localhost:${PORT}`,
-                        url: '/register-maltrans-user',
-                        method: 'post',
-                        headers: {
-                          'Accept': 'application/json, text/plain, */*',
-                          'Content-Type': 'application/json'
-                        },
-                        data: JSON.stringify(data)
-                    }).then((response) => {
-                        if(i + 1 == records.length){
-                            axios({
-                                baseURL:`http://localhost:${PORT}`,
-                                url: '/get-all-maltrans-user',
-                                method: 'get',
-                                headers: {
-                                    'Accept': 'application/json, text/plain, */*',
-                                    'Content-Type': 'application/json'
-                                },
-                            }).then(response => {
-                                res.send(response.data)
-                            })
-                        }
-                    })
-                }
-            }
-            if(records.length != 0){
-                start()
-            }else{
-                res.send('empty')
-            }
-        })
-    }
-}
-
-function saveMaltransUser(req,res){
-    const {username, password,email,confirmPass} = req.body;
-    if(confirmPass == CONFIRM_PASS){
-        const getMaltransUser = 'SELECT * FROM maltransUsertable WHERE username = $1';
-        client.query(getMaltransUser,[username]).then(data => {
-            if(data.rows[0]?.username == username){
-                res.send({
-                    status: 'failed',
-                    msg:"username exists"
-                })
-            }else{
-                const addUser = 'INSERT INTO maltransUsertable (username,pass,email) VALUES ($1, $2, $3) RETURNING *';
-                const userInfo = [username,password,email];
-                client.query(addUser, userInfo).then(data => { 
-                    res.send({
-                        status: 'success',
-                        msg:"user registered"
-                    })
-                }).catch(err => {
-                    console.log(err)
-                    res.send({
-                        status: 'failed',
-                        msg:"could not save Maltrans user due to server internal error, please try again"
-                    })
-                })
-            }
-        }).catch(err => {
-            console.log(err)
-            res.send({
-                status: 'failed',
-                msg:"could not save Maltrans user due to server internal error, please try again"
-            })
-        });
-    }else{
-        res.send({
-            status: 'failed',
-            msg:"confirmation password is wrong"
-        })
-    }
-}
-
-function updateMaltransUser(req,res){
-    const {username,newpass,newemail,confirmPass} = req.body;
-    let updateMaltransUser;
-    let values;
-    if(newpass){
-        updateMaltransUser = 'UPDATE maltransUsertable SET pass=$1 WHERE username = $2'
-        values = [newpass,username]
-    }else if(newemail){
-        if(confirmPass == CONFIRM_PASS){
-            updateMaltransUser = 'UPDATE maltransUsertable SET email=$1 WHERE username = $2'
-            values = [newemail,username]
-        }else{
-            res.send({
-                status: 'failed',
-                msg:"confirmation password is wrong"
-            })
-        }
-    }
-    client.query(updateMaltransUser,values).then(data=>{
-        res.send({
-            status: 'success',
-            msg: 'user updated'
-        });
-    }).catch(err => {
-        console.log(err)
-        res.send({
-            status: 'failed',
-            msg:"could not update Maltrans user due to server internal error, please try again"
-        })
-    });
-}
-
-function deleteMaltransUser(req,res){
-    const {username} = req.body;
-    const deleteMaltransUser = 'DELETE FROM maltransUsertable WHERE username = $1'
-    client.query(deleteMaltransUser,[username]).then(data=>{
-        res.send({
-            status: 'success',
-            msg: 'user deleted'
-        });
-    }).catch(err => {
-        console.log(err)
-        res.send({
-            status: 'failed',
-            msg:"could not delete Maltrans user due to server internal error, please try again"
-        })
-    });
-}
-
-function checkMaltransUser(req,res){
-    const {username,password} = req.body;
-    const checkMaltransUser = 'SELECT * FROM maltransUsertable WHERE username = $1';
-    client.query(checkMaltransUser,[username]).then(data => {
-        if(data.rows.length > 0){
-            if(data.rows[0].pass == password){
-                let tokens = functions.create(username)
-                tokens.username = username
-                tokens.email = data.rows[0].email
-                res.send({
-                    status:"success",
-                    msg:"success",
-                    tokens
-                })
-            }else{
-                res.send({
-                    status: 'faild',
-                    msg: 'invalid username or password'
-                })
-            }
-        }else{
-            res.send({
-                status: 'faild',
-                msg: 'invalid username or password'
-            })
-        }
-    }).catch(err => {
-        console.log(err)
-        res.send({
-            status: 'faild',
-            msg: 'internal error! please try again'
-        })
-    });
-}
-
