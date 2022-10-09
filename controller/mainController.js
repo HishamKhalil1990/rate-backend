@@ -72,6 +72,7 @@ const saveMaltData = async(req,res) => {
     formData.append('customeInsurance', data.customeInsurance);
     formData.append('clearanceFinish', data.clearanceFinish);
     formData.append('requiredAction', data.requiredAction);
+    formData.append('docDone', data.docDone);
     formData.append('UserName', data.UserName);
     formData.append('FileOneName',data.FileOneName)
     formData.append('FileTwoName',data.FileTwoName)
