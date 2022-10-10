@@ -18,7 +18,7 @@ const maltrans = require('./routes/maltrans')
 const app = express();
 // setup app
 app.use(cors());
-app.use(bodyParser.json())
+app.use(bodyParser.json({limit: '50mb'}))
 app.use('/maltrans',maltrans)
 // creating psql client
 const options = NODE_ENV === 'production' ? { connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } } : { connectionString: DATABASE_URL };
