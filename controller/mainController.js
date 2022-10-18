@@ -113,8 +113,60 @@ const saveMaltData = async(req,res) => {
     })
 }
 
+const getContainerInfo = async(req,res) => {
+    const data = req.body;
+    const token = req.token
+    axios({
+        baseURL:`${SERVICE_URL}`,
+        url: '/get-container-info',
+        method: 'post',
+        headers: {
+          'Accept': 'application/json, text/plain, */*',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        data: JSON.stringify(data)
+    })
+    .then(results => {
+        res.send(results.data)
+    })
+    .catch(err => {
+        res.send({
+            status: 'faild',
+            msg: 'server is shutdown!'
+        })
+    })
+}
+
+const saveContainerInfo = async(req,res) => {
+    const data = req.body;
+    const token = req.token
+    axios({
+        baseURL:`${SERVICE_URL}`,
+        url: '/save-container-info',
+        method: 'post',
+        headers: {
+          'Accept': 'application/json, text/plain, */*',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        data: JSON.stringify(data)
+    })
+    .then(results => {
+        res.send(results.data)
+    })
+    .catch(err => {
+        res.send({
+            status: 'faild',
+            msg: 'server is shutdown!'
+        })
+    })
+}
+
 module.exports = {
     billOfLadingInfo,
     checkMaltransUser,
-    saveMaltData
+    saveMaltData,
+    getContainerInfo,
+    saveContainerInfo
 }
