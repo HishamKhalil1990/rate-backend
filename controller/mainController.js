@@ -73,7 +73,7 @@ const saveMaltData = async(req,res) => {
     formData.append('clearanceFinish', data.clearanceFinish);
     formData.append('requiredAction', data.requiredAction);
     formData.append('docDone', data.docDone);
-    formData.append('notes', data.notes);
+    formData.append('notes', data.notes? data.notes : "لا يوجد ملاحظات");
     formData.append('UserName', data.UserName);
     formData.append('FileOneName',data.FileOneName)
     formData.append('FileTwoName',data.FileTwoName)
