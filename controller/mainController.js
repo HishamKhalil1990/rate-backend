@@ -69,6 +69,7 @@ const saveMaltData = async(req,res) => {
     formData.append('healthPath', data.healthPath);
     formData.append('customPath', data.customPath);
     formData.append('agriPath', data.agriPath);
+    formData.append('customTerms', data.customTerms);
     formData.append('customeInsurance', data.customeInsurance);
     formData.append('clearanceFinish', data.clearanceFinish);
     formData.append('requiredAction', data.requiredAction);
